@@ -1,18 +1,26 @@
 @import "tailwindcss";
 
 @theme {
-  --color-nhl-bg: #111111;
-  --color-nhl-panel: #1a1a1a;
-  --color-nhl-panel-hover: #2a2a2a;
-  --color-nhl-text: #ffffff;
-  --color-nhl-muted: #a0a0a0;
-  --color-nhl-accent: #0066cc;
-  --color-nhl-accent-hover: #0052a3;
-  --color-nhl-border: #333333;
+  --color-nhl-bg: #f8fafc; /* slate-50 */
+  --color-nhl-panel: #ffffff;
+  --color-nhl-panel-hover: #f1f5f9; /* slate-100 */
+  --color-nhl-text: #1e293b; /* slate-800 */
+  --color-nhl-muted: #64748b; /* slate-500 */
+  --color-nhl-accent: #0f172a; /* slate-900 (for buttons) */
+  --color-nhl-accent-hover: #334155; /* slate-700 */
+  --color-nhl-border: #e2e8f0; /* slate-200 */
 }
 
 body {
   background-color: var(--color-nhl-bg);
   color: var(--color-nhl-text);
-  font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Base link styles */
+a {
+  color: inherit;
+  text-decoration: inherit;
 }

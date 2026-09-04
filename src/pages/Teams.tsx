@@ -21,48 +21,48 @@ export default function Teams() {
     loadData();
   }, []);
 
-  if (loading) return <div className="text-center py-20 text-[var(--color-nhl-muted)]">Loading teams...</div>;
+  if (loading) return <div className="text-center py-20 text-slate-500 font-medium">Loading teams...</div>;
 
   const columns = [
     {
-      header: 'Team',
+      header: 'TEAM',
       accessor: (team: Team) => (
-        <div className="flex items-center space-x-4">
-          <div className="w-10 h-10 flex items-center justify-center bg-white rounded-full p-1">
-             <img src={team.logo} alt={team.name} className="max-w-full max-h-full object-contain" />
-          </div>
+        <div className="flex items-center space-x-4 py-1">
+          <img src={team.logo} alt={team.name} className="w-10 h-10 object-contain" />
           <div>
-            <div className="font-bold text-white uppercase">{team.name}</div>
-            <div className="text-xs text-[var(--color-nhl-muted)] uppercase">{team.city}, {team.country}</div>
+            <div className="font-bold text-slate-900">{team.name}</div>
+            <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">{team.city}, {team.country}</div>
           </div>
         </div>
       ),
       className: 'w-1/2'
     },
     {
-      header: 'Arena',
+      header: 'ARENA',
       accessor: 'arena' as keyof Team,
+      className: 'font-medium'
     },
     {
-      header: 'Est.',
+      header: 'EST.',
       accessor: 'established' as keyof Team,
+      className: 'font-medium'
     }
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-end border-b border-[var(--color-nhl-border)] pb-4">
-        <div>
-          <h1 className="text-3xl font-bold uppercase tracking-wider text-white">Teams</h1>
-          <p className="text-[var(--color-nhl-muted)] mt-1">Benelux Ice Hockey Ecosystem</p>
-        </div>
+    <div className="max-w-[1400px] mx-auto px-4 md:px-8 py-8 space-y-6">
+      <div className="mb-8">
+        <h1 className="text-3xl font-black italic tracking-tighter uppercase text-slate-900">Teams</h1>
+        <p className="text-slate-500 mt-2 font-medium">Benelux Ice Hockey Ecosystem</p>
       </div>
 
-      <DataTable
-        data={teams}
-        columns={columns}
-        keyExtractor={(team) => team.id}
-      />
+      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+        <DataTable
+          data={teams}
+          columns={columns}
+          keyExtractor={(team) => team.id}
+        />
+      </div>
     </div>
   );
 }

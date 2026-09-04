@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../services/api';
 import type { Game, Team } from '../types';
+import { Info, ChevronDown } from 'lucide-react';
 
 export default function Home() {
   const [games, setGames] = useState<Game[]>([]);
@@ -25,74 +26,116 @@ export default function Home() {
     loadData();
   }, []);
 
-  const getTeamName = (id: string) => {
-    const team = teams.find(t => t.id === id);
-    return team ? team.name : id;
-  };
-
   const getTeamLogo = (id: string) => {
     const team = teams.find(t => t.id === id);
     return team?.logo || '';
   };
 
-  if (loading) return <div className="text-center py-20 text-[var(--color-nhl-muted)]">Loading...</div>;
+  const getTeamShortName = (id: string) => {
+    const team = teams.find(t => t.id === id);
+    if (!team) return id;
+    // Extract a 3-letter abbreviation from the team name for the cards (e.g. "Flyers" -> "FLY")
+    return team.name.substring(0, 3).toUpperCase();
+  };
+
+  if (loading) return <div className="text-center py-20 text-slate-500 font-medium">Loading...</div>;
 
   return (
-    <div className="space-y-8">
-      <section className="relative h-[400px] rounded-lg overflow-hidden flex items-end">
-        <div className="absolute inset-0 bg-gradient-to-t from-[#111] via-[#111]/70 to-transparent z-10" />
-        <img
-          src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Hockey_Ice.jpg/1200px-Hockey_Ice.jpg"
-          alt="Ice Hockey"
-          className="absolute inset-0 w-full h-full object-cover opacity-50"
-        />
-        <div className="relative z-20 p-8">
-          <span className="inline-block px-2 py-1 bg-[var(--color-nhl-accent)] text-white text-xs font-bold uppercase tracking-wider mb-3">
-            Latest News
-          </span>
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-2 uppercase tracking-tight">
-            The New Season is Here
-          </h1>
-          <p className="text-lg text-gray-300 max-w-2xl">
-            Follow the latest action from the Benelux ice hockey ecosystem. Get real-time updates, standings, and player statistics all in one place.
-          </p>
-        </div>
-      </section>
+    <div className="max-w-[1400px] mx-auto px-4 md:px-8 py-8 space-y-12">
 
+      {/* Alert Banner */}
+      <div className="bg-white border border-slate-200 rounded-lg p-4 flex items-center space-x-3 text-slate-700">
+        <Info className="w-5 h-5 text-slate-400" />
+        <span className="text-sm font-medium">
+          The season is currently on break. Check out the latest stats, historical picks, and get ready for the new matches!
+        </span>
+      </div>
+
+      {/* Leader Picks Section */}
       <section>
-        <h2 className="text-2xl font-bold uppercase tracking-wider mb-6 border-b border-[var(--color-nhl-border)] pb-2">
-          Recent Scores
-        </h2>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-black italic text-slate-900 tracking-tighter uppercase">
+            2023-24 LEADER PICKS
+          </h2>
+        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {games.map(game => (
-            <div key={game.id} className="bg-[var(--color-nhl-panel)] border border-[var(--color-nhl-border)] rounded hover:border-[var(--color-nhl-accent)] transition-colors cursor-pointer overflow-hidden">
-              <div className="bg-[#222] px-4 py-2 text-xs font-semibold text-[var(--color-nhl-muted)] uppercase tracking-wider border-b border-[var(--color-nhl-border)] flex justify-between">
-                <span>{new Date(game.date).toLocaleDateString()}</span>
-                <span>{game.status}</span>
+        {/* We use grid to emulate the "Leader Picks" cards from nhlplay.online */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {games.slice(0, 4).map((game, i) => (
+            <div key={game.id} className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm flex flex-col hover:border-slate-300 transition-colors">
+              {/* Card Header */}
+              <div className="px-4 py-3 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider bg-slate-200/50 px-2 py-0.5 rounded-sm">
+                  OPEN
+                </span>
+                <span className="text-[12px] font-semibold text-slate-500">
+                  {new Date(game.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                </span>
               </div>
 
-              <div className="p-4 space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <img src={getTeamLogo(game.awayTeamId)} alt="" className="w-8 h-8 object-contain" />
-                    <span className="font-semibold">{getTeamName(game.awayTeamId)}</span>
-                  </div>
-                  <span className="text-xl font-bold text-[var(--color-nhl-muted)]">{game.awayScore}</span>
+              {/* Card Body - Teams */}
+              <div className="p-5 flex-grow flex justify-between items-center">
+                <div className="flex flex-col items-center">
+                  <img src={getTeamLogo(game.awayTeamId)} alt="" className="w-12 h-12 object-contain mb-2" />
+                  <span className="text-lg font-black text-slate-900">{getTeamShortName(game.awayTeamId)}</span>
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <img src={getTeamLogo(game.homeTeamId)} alt="" className="w-8 h-8 object-contain" />
-                    <span className="font-semibold text-white">{getTeamName(game.homeTeamId)}</span>
-                  </div>
-                  <span className="text-xl font-bold text-white">{game.homeScore}</span>
+                <span className="text-sm font-bold text-slate-400">@</span>
+
+                <div className="flex flex-col items-center">
+                  <img src={getTeamLogo(game.homeTeamId)} alt="" className="w-12 h-12 object-contain mb-2" />
+                  <span className="text-lg font-black text-slate-900">{getTeamShortName(game.homeTeamId)}</span>
+                </div>
+              </div>
+
+              {/* Action Button */}
+              <div className="px-5 pb-5">
+                <button className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold rounded-lg transition-colors">
+                  Sign In to Pick
+                </button>
+              </div>
+
+              {/* Footer numbers */}
+              <div className="bg-slate-50 px-5 py-3 border-t border-slate-100">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs font-semibold text-slate-500">Match #{i + 1}</span>
+                  <span className="text-xs font-bold text-slate-900">100 pts</span>
                 </div>
               </div>
             </div>
           ))}
         </div>
+
+        {/* Divider with Button */}
+        <div className="relative mt-12 mb-16 flex items-center justify-center">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-slate-200"></div>
+          </div>
+          <button className="relative bg-white border border-slate-200 px-6 py-2 rounded-full text-sm font-bold text-slate-700 flex items-center hover:bg-slate-50 transition-colors">
+            View Leaders
+            <ChevronDown className="w-4 h-4 ml-1" />
+          </button>
+        </div>
       </section>
+
+      {/* CTA Banner */}
+      <section className="bg-gradient-to-r from-blue-600 to-cyan-500 rounded-2xl p-8 md:p-12 text-center text-white shadow-lg">
+        <h2 className="text-3xl md:text-4xl font-black italic tracking-tighter uppercase mb-4">
+          ENJOYING BNLPLAY?
+        </h2>
+        <p className="text-blue-50 text-lg md:text-xl font-medium max-w-2xl mx-auto mb-8">
+          Join thousands of fans making picks, predicting matches, and climbing the leaderboards in the Benelux Ice Hockey ecosystem.
+        </p>
+        <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4">
+          <button className="w-full sm:w-auto px-8 py-3 bg-white text-slate-900 text-[15px] font-bold rounded-lg hover:bg-slate-50 transition-colors">
+            Sign Up Free
+          </button>
+          <button className="w-full sm:w-auto px-8 py-3 bg-slate-900 text-white text-[15px] font-bold rounded-lg hover:bg-slate-800 transition-colors">
+            Log In
+          </button>
+        </div>
+      </section>
+
     </div>
   );
 }

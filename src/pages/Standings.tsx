@@ -26,66 +26,65 @@ export default function Standings() {
     loadData();
   }, []);
 
-  if (loading) return <div className="text-center py-20 text-[var(--color-nhl-muted)]">Loading standings...</div>;
+  if (loading) return <div className="text-center py-20 text-slate-500 font-medium">Loading standings...</div>;
 
   const getTeam = (id: string) => teams.find(t => t.id === id);
 
   const columns = [
     {
-      header: 'Rank',
+      header: 'RANK',
       accessor: (_: Standing) => (
-        <span className="font-bold text-[var(--color-nhl-muted)]">
-           {/* Simple index calculation for rank, assuming data is already sorted by points */}
+        <span className="font-bold text-slate-400">
            {standings.indexOf(_) + 1}
         </span>
       ),
       className: 'w-12 text-center'
     },
     {
-      header: 'Team',
+      header: 'TEAM',
       accessor: (standing: Standing) => {
         const team = getTeam(standing.teamId);
         return (
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-3 py-1">
             {team?.logo && (
-              <div className="w-6 h-6 flex items-center justify-center bg-white rounded-full p-0.5">
-                <img src={team.logo} alt="" className="max-w-full max-h-full object-contain" />
-              </div>
+              <img src={team.logo} alt="" className="w-8 h-8 object-contain" />
             )}
-            <span className="font-bold text-white uppercase">{team?.name || standing.teamId}</span>
+            <span className="font-bold text-slate-900">{team?.name || standing.teamId}</span>
           </div>
         );
       },
     },
-    { header: 'GP', accessor: 'gamesPlayed' as keyof Standing, className: 'text-center' },
-    { header: 'W', accessor: 'wins' as keyof Standing, className: 'text-center' },
-    { header: 'L', accessor: 'losses' as keyof Standing, className: 'text-center' },
-    { header: 'OTL', accessor: 'otLosses' as keyof Standing, className: 'text-center text-[var(--color-nhl-muted)]' },
-    { header: 'PTS', accessor: 'points' as keyof Standing, className: 'text-center font-bold text-[var(--color-nhl-accent)] text-lg' },
-    { header: 'GF', accessor: 'goalsFor' as keyof Standing, className: 'text-center hidden md:table-cell' },
-    { header: 'GA', accessor: 'goalsAgainst' as keyof Standing, className: 'text-center hidden md:table-cell' },
+    { header: 'GP', accessor: 'gamesPlayed' as keyof Standing, className: 'text-center font-medium' },
+    { header: 'W', accessor: 'wins' as keyof Standing, className: 'text-center font-medium' },
+    { header: 'L', accessor: 'losses' as keyof Standing, className: 'text-center font-medium' },
+    { header: 'OTL', accessor: 'otLosses' as keyof Standing, className: 'text-center text-slate-400 font-medium' },
+    { header: 'PTS', accessor: 'points' as keyof Standing, className: 'text-center font-black text-slate-900 text-lg' },
+    { header: 'GF', accessor: 'goalsFor' as keyof Standing, className: 'text-center hidden md:table-cell font-medium' },
+    { header: 'GA', accessor: 'goalsAgainst' as keyof Standing, className: 'text-center hidden md:table-cell font-medium' },
     {
       header: 'DIFF',
       accessor: (s: Standing) => {
         const diff = s.goalsFor - s.goalsAgainst;
-        return <span className={diff > 0 ? 'text-green-500' : diff < 0 ? 'text-red-500' : ''}>{diff > 0 ? `+${diff}` : diff}</span>;
+        return <span className={`font-semibold ${diff > 0 ? 'text-emerald-600' : diff < 0 ? 'text-rose-600' : 'text-slate-600'}`}>{diff > 0 ? `+${diff}` : diff}</span>;
       },
       className: 'text-center'
     }
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="border-b border-[var(--color-nhl-border)] pb-4">
-        <h1 className="text-3xl font-bold uppercase tracking-wider text-white">League Standings</h1>
-        <p className="text-[var(--color-nhl-muted)] mt-1">Current season points and rankings</p>
+    <div className="max-w-[1400px] mx-auto px-4 md:px-8 py-8 space-y-6">
+      <div className="mb-8">
+        <h1 className="text-3xl font-black italic tracking-tighter uppercase text-slate-900">League Standings</h1>
+        <p className="text-slate-500 mt-2 font-medium">Current season points and rankings</p>
       </div>
 
-      <DataTable
-        data={standings}
-        columns={columns}
-        keyExtractor={(s) => s.teamId}
-      />
+      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+        <DataTable
+          data={standings}
+          columns={columns}
+          keyExtractor={(s) => s.teamId}
+        />
+      </div>
     </div>
   );
 }

@@ -27,54 +27,56 @@ export default function Players() {
     loadData();
   }, []);
 
-  if (loading) return <div className="text-center py-20 text-[var(--color-nhl-muted)]">Loading players...</div>;
+  if (loading) return <div className="text-center py-20 text-slate-500 font-medium">Loading players...</div>;
 
   const getTeam = (id: string) => teams.find(t => t.id === id);
 
   const columns = [
     {
-      header: 'Player',
+      header: 'PLAYER',
       accessor: (player: Player) => (
-        <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 rounded-full bg-[var(--color-nhl-panel-hover)] flex items-center justify-center text-[var(--color-nhl-muted)] font-bold text-xs border border-[var(--color-nhl-border)]">
+        <div className="flex items-center space-x-3 py-1">
+          <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold text-xs border border-slate-200">
             #{player.number}
           </div>
-          <span className="font-bold text-white uppercase">{player.name}</span>
+          <span className="font-bold text-slate-900">{player.name}</span>
         </div>
       ),
       className: 'w-1/3'
     },
     {
-      header: 'Team',
+      header: 'TEAM',
       accessor: (player: Player) => {
         const team = getTeam(player.teamId);
         return (
           <div className="flex items-center space-x-2">
-            {team?.logo && <img src={team.logo} alt="" className="w-5 h-5 object-contain bg-white rounded-full p-0.5" />}
-            <span className="text-[var(--color-nhl-muted)] uppercase text-xs">{team?.shortName || player.teamId}</span>
+            {team?.logo && <img src={team.logo} alt="" className="w-6 h-6 object-contain" />}
+            <span className="text-slate-600 font-semibold uppercase text-xs tracking-wider">{team?.shortName || player.teamId}</span>
           </div>
         );
       },
     },
-    { header: 'POS', accessor: 'position' as keyof Player, className: 'text-center text-[var(--color-nhl-muted)] font-bold' },
-    { header: 'GP', accessor: 'gamesPlayed' as keyof Player, className: 'text-center' },
-    { header: 'G', accessor: 'goals' as keyof Player, className: 'text-center' },
-    { header: 'A', accessor: 'assists' as keyof Player, className: 'text-center' },
-    { header: 'PTS', accessor: 'points' as keyof Player, className: 'text-center font-bold text-white' }
+    { header: 'POS', accessor: 'position' as keyof Player, className: 'text-center text-slate-500 font-bold' },
+    { header: 'GP', accessor: 'gamesPlayed' as keyof Player, className: 'text-center font-medium' },
+    { header: 'G', accessor: 'goals' as keyof Player, className: 'text-center font-medium' },
+    { header: 'A', accessor: 'assists' as keyof Player, className: 'text-center font-medium' },
+    { header: 'PTS', accessor: 'points' as keyof Player, className: 'text-center font-black text-slate-900' }
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="border-b border-[var(--color-nhl-border)] pb-4">
-        <h1 className="text-3xl font-bold uppercase tracking-wider text-white">Player Statistics</h1>
-        <p className="text-[var(--color-nhl-muted)] mt-1">League leaders in points, goals, and assists</p>
+    <div className="max-w-[1400px] mx-auto px-4 md:px-8 py-8 space-y-6">
+      <div className="mb-8">
+        <h1 className="text-3xl font-black italic tracking-tighter uppercase text-slate-900">Player Statistics</h1>
+        <p className="text-slate-500 mt-2 font-medium">League leaders in points, goals, and assists</p>
       </div>
 
-      <DataTable
-        data={players}
-        columns={columns}
-        keyExtractor={(p) => p.id}
-      />
+      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+        <DataTable
+          data={players}
+          columns={columns}
+          keyExtractor={(p) => p.id}
+        />
+      </div>
     </div>
   );
 }
