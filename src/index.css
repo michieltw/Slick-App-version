@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+@theme {
+  --color-nhl-bg: #111111;
+  --color-nhl-panel: #1a1a1a;
+  --color-nhl-panel-hover: #2a2a2a;
+  --color-nhl-text: #ffffff;
+  --color-nhl-muted: #a0a0a0;
+  --color-nhl-accent: #0066cc;
+  --color-nhl-accent-hover: #0052a3;
+  --color-nhl-border: #333333;
+}
+
+body {
+  background-color: var(--color-nhl-bg);
+  color: var(--color-nhl-text);
+  font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}
