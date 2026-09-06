@@ -1,22 +1,30 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { api } from '../services/api';
-import type { Standing, Team } from '../types';
+import type { Standing, Team, League } from '../types';
 import DataTable from '../components/DataTable';
 
 export default function Standings() {
   const [standings, setStandings] = useState<Standing[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
+  const [leagues, setLeagues] = useState<League[]>([]);
+  const [activeLeagueId, setActiveLeagueId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadData() {
       try {
-        const [standingsData, teamsData] = await Promise.all([
+        const [standingsData, teamsData, leaguesData] = await Promise.all([
           api.getStandings(),
-          api.getTeams()
+          api.getTeams(),
+          api.getLeagues()
         ]);
         setStandings(standingsData);
         setTeams(teamsData);
+        setLeagues(leaguesData);
+
+        if (leaguesData.length > 0) {
+          setActiveLeagueId(leaguesData[0].id);
+        }
       } catch (error) {
         console.error('Failed to load standings', error);
       } finally {
@@ -26,9 +34,16 @@ export default function Standings() {
     loadData();
   }, []);
 
+  const getTeam = (id: string) => teams.find(t => t.id === id);
+
+  const filteredStandings = useMemo(() => {
+    if (!activeLeagueId) return standings;
+    const leagueTeamIds = new Set(teams.filter(t => t.leagueId === activeLeagueId).map(t => t.id));
+    return standings.filter(s => leagueTeamIds.has(s.teamId)).sort((a, b) => b.points - a.points);
+  }, [standings, teams, activeLeagueId]);
+
   if (loading) return <div className="text-center py-20 text-slate-500 font-medium">Loading standings...</div>;
 
-  const getTeam = (id: string) => teams.find(t => t.id === id);
 
   const columns = [
     {
@@ -73,14 +88,35 @@ export default function Standings() {
 
   return (
     <div className="max-w-[1400px] mx-auto px-4 md:px-8 py-8 space-y-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-black italic tracking-tighter uppercase text-slate-900">League Standings</h1>
-        <p className="text-slate-500 mt-2 font-medium">Current season points and rankings</p>
+      <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div>
+          <h1 className="text-3xl font-black italic tracking-tighter uppercase text-slate-900">League Standings</h1>
+          <p className="text-slate-500 mt-2 font-medium">Current season points and rankings</p>
+        </div>
+
+        {/* League Selector */}
+        {leagues.length > 0 && (
+          <div className="flex space-x-2 bg-slate-100 p-1 rounded-lg self-start">
+            {leagues.map(league => (
+              <button
+                key={league.id}
+                onClick={() => setActiveLeagueId(league.id)}
+                className={`px-4 py-2 rounded-md text-sm font-bold transition-colors ${
+                  activeLeagueId === league.id
+                    ? 'bg-white text-slate-900 shadow-sm'
+                    : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                {league.shortName}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
         <DataTable
-          data={standings}
+          data={filteredStandings}
           columns={columns}
           keyExtractor={(s) => s.teamId}
         />

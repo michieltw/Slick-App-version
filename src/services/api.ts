@@ -1,4 +1,4 @@
-import type { Database, Team, Player, Standing, Venue, Retailer, Game, User } from '../types';
+import type { Database, Team, Player, Standing, Venue, Retailer, Game, User, League } from '../types';
 
 const DB_KEY = 'bnlplay_db';
 
@@ -16,6 +16,13 @@ class ApiService {
 
     // Add timestamps to seeded data
     const now = new Date().toISOString();
+
+    // Create mock leagues
+    const mockLeagues: League[] = [
+      { id: 'l1', name: 'Benelux Super League', shortName: 'BSL', region: 'Benelux', createdAt: now, updatedAt: now },
+      { id: 'l2', name: 'Eredivisie', shortName: 'ERE', region: 'Netherlands', createdAt: now, updatedAt: now }
+    ];
+
     const seedData = {
       ...data,
       users: [
@@ -24,7 +31,13 @@ class ApiService {
         { id: 'u3', username: 'Bulldogs Manager', role: 'manager', teamId: 't2', createdAt: now, updatedAt: now },
         { id: 'u4', username: 'Fan Account', role: 'fan', createdAt: now, updatedAt: now }
       ] as User[],
-      teams: data.teams.map(t => ({ ...t, createdAt: now, updatedAt: now })),
+      leagues: mockLeagues,
+      teams: data.teams.map((t, idx) => ({
+        ...t,
+        leagueId: idx % 2 === 0 ? 'l1' : 'l2', // Mock associate teams with leagues
+        createdAt: now,
+        updatedAt: now
+      })),
       players: data.players.map(p => ({ ...p, createdAt: now, updatedAt: now })),
       venues: data.venues.map(v => ({ ...v, createdAt: now, updatedAt: now })),
       retailers: data.retailers.map(r => ({ ...r, createdAt: now, updatedAt: now })),
@@ -46,6 +59,11 @@ class ApiService {
   async getUsers(): Promise<User[]> {
     const db = await this.getDatabase();
     return db.users;
+  }
+
+  async getLeagues(): Promise<League[]> {
+    const db = await this.getDatabase();
+    return db.leagues;
   }
 
   async getTeams(): Promise<Team[]> {
@@ -117,8 +135,69 @@ class ApiService {
 
   async getStandings(): Promise<Standing[]> {
     const db = await this.getDatabase();
-    // Sort by points descending
-    return [...db.standings].sort((a, b) => b.points - a.points);
+
+    // Dynamically calculate standings based on games played
+    const standingsMap = new Map<string, Standing>();
+
+    // Initialize all teams
+    db.teams.forEach(team => {
+      standingsMap.set(team.id, {
+        teamId: team.id,
+        gamesPlayed: 0,
+        wins: 0,
+        losses: 0,
+        otLosses: 0,
+        points: 0,
+        goalsFor: 0,
+        goalsAgainst: 0
+      });
+    });
+
+    // Calculate stats
+    db.games.filter(g => g.status === 'Final').forEach(game => {
+      const homeStanding = standingsMap.get(game.homeTeamId);
+      const awayStanding = standingsMap.get(game.awayTeamId);
+
+      if (homeStanding && awayStanding) {
+        homeStanding.gamesPlayed += 1;
+        awayStanding.gamesPlayed += 1;
+        homeStanding.goalsFor += game.homeScore;
+        homeStanding.goalsAgainst += game.awayScore;
+        awayStanding.goalsFor += game.awayScore;
+        awayStanding.goalsAgainst += game.homeScore;
+
+        if (game.homeScore > game.awayScore) {
+          homeStanding.wins += 1;
+          homeStanding.points += 2;
+
+          if (game.period && game.period > 3) {
+             awayStanding.otLosses += 1;
+             awayStanding.points += 1;
+          } else {
+             awayStanding.losses += 1;
+          }
+        } else {
+          awayStanding.wins += 1;
+          awayStanding.points += 2;
+
+          if (game.period && game.period > 3) {
+             homeStanding.otLosses += 1;
+             homeStanding.points += 1;
+          } else {
+             homeStanding.losses += 1;
+          }
+        }
+      }
+    });
+
+    // If no games played, fallback to seed data to ensure the UI looks populated initially (for demonstration)
+    // In a pure production app, this would just return the calculated (but 0-filled) standing map.
+    const hasCalculatedGames = db.games.some(g => g.status === 'Final');
+    if (!hasCalculatedGames && db.standings.length > 0) {
+        return [...db.standings].sort((a, b) => b.points - a.points);
+    }
+
+    return Array.from(standingsMap.values()).sort((a, b) => b.points - a.points);
   }
 
   async getVenues(): Promise<Venue[]> {

@@ -4,6 +4,12 @@ export interface BaseEntity {
   updatedAt?: string;
 }
 
+export interface League extends BaseEntity {
+  name: string;
+  shortName: string;
+  region: string;
+}
+
 export interface Team extends BaseEntity {
   name: string;
   shortName: string;
@@ -12,6 +18,7 @@ export interface Team extends BaseEntity {
   arena: string;
   established: number;
   logo: string;
+  leagueId: string;
 }
 
 export interface Player extends BaseEntity {
@@ -74,6 +81,7 @@ export interface User extends BaseEntity {
 
 export interface Database {
   users: User[];
+  leagues: League[];
   teams: Team[];
   players: Player[];
   standings: Standing[];

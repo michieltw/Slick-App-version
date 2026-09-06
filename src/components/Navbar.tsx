@@ -1,10 +1,8 @@
 import { NavLink } from 'react-router-dom';
-import { Menu, X, ChevronDown } from 'lucide-react';
-import { useState } from 'react';
+import { ChevronDown } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function Navbar() {
-  const [isOpen, setIsOpen] = useState(false);
   const { user, logout } = useAuth();
 
   const navLinks = [
@@ -16,7 +14,7 @@ export default function Navbar() {
   ];
 
   return (
-    <nav className="bg-white border-b border-slate-200 sticky top-0 z-50">
+    <nav className="bg-white border-b border-slate-200 sticky top-0 z-50 hidden md:block">
       <div className="max-w-[1400px] mx-auto px-4 md:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center space-x-8">
@@ -74,72 +72,8 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Mobile Menu Button */}
-          <div className="md:hidden">
-            <button
-              onClick={() => setIsOpen(!isOpen)}
-              className="text-slate-600 hover:text-slate-900 p-2"
-            >
-              {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </button>
-          </div>
         </div>
       </div>
-
-      {/* Mobile Nav */}
-      {isOpen && (
-        <div className="md:hidden bg-white border-b border-slate-200">
-          <div className="px-4 pt-2 pb-4 space-y-2">
-            {navLinks.map((link) => (
-              <NavLink
-                key={link.path}
-                to={link.path}
-                onClick={() => setIsOpen(false)}
-                className={({ isActive }) =>
-                  `block px-3 py-2 rounded-md text-base font-semibold ${
-                    isActive
-                      ? 'bg-slate-100 text-slate-900'
-                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                  }`
-                }
-              >
-                {link.name}
-              </NavLink>
-            ))}
-            <div className="pt-4 mt-2 border-t border-slate-100 space-y-2">
-              {user ? (
-                <>
-                  <div className="px-3 py-2 text-sm font-semibold text-slate-600">
-                    Hi, {user.username}
-                  </div>
-                  <button
-                    onClick={() => {
-                      logout();
-                      setIsOpen(false);
-                    }}
-                    className="w-full text-center px-4 py-2 text-[15px] font-semibold text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50"
-                  >
-                    Log Out
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button className="w-full text-center px-4 py-2 text-[15px] font-semibold text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50">
-                    Sign Up Free
-                  </button>
-                  <NavLink
-                    to="/login"
-                    onClick={() => setIsOpen(false)}
-                    className="block w-full text-center px-4 py-2 text-[15px] font-semibold text-white bg-slate-900 rounded-md hover:bg-slate-800"
-                  >
-                    Log In
-                  </NavLink>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </nav>
   );
 }
