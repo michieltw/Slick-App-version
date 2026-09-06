@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
-import type { Team, Player } from '../types';
+import type { Team, Player, Post } from '../types';
 import DataTable from '../components/DataTable';
-import { MapPin, Calendar, Plus, Trash2, Edit2, Save, X } from 'lucide-react';
+import { MapPin, Calendar, Plus, Trash2, Edit2, Save, X, MessageSquare, Heart } from 'lucide-react';
 
 export default function TeamDetail() {
   const { id } = useParams<{ id: string }>();
@@ -12,6 +12,7 @@ export default function TeamDetail() {
 
   const [team, setTeam] = useState<Team | null>(null);
   const [roster, setRoster] = useState<Player[]>([]);
+  const [news, setNews] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Authorization checks
@@ -33,12 +34,14 @@ export default function TeamDetail() {
     async function loadData() {
       if (!id) return;
       try {
-        const [teamData, rosterData] = await Promise.all([
+        const [teamData, rosterData, newsData] = await Promise.all([
           api.getTeamById(id),
-          api.getPlayersByTeamId(id)
+          api.getPlayersByTeamId(id),
+          api.getPostsByTeamId(id)
         ]);
         setTeam(teamData || null);
         setRoster(rosterData);
+        setNews(newsData);
       } catch (error) {
         console.error('Failed to load team data', error);
       } finally {
@@ -288,6 +291,48 @@ export default function TeamDetail() {
           )}
         </div>
       </div>
+
+      {/* Team News Section */}
+      {news.length > 0 && (
+        <div className="space-y-6">
+          <h2 className="text-2xl font-black italic tracking-tighter uppercase text-slate-900 border-t border-slate-200 pt-8 mt-4">Team News</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {news.map(post => {
+              const date = new Date(post.createdAt || 0);
+              return (
+                <div key={post.id} className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm flex flex-col">
+                  <div className="p-5 flex-grow">
+                    <div className="flex items-center space-x-3 mb-4">
+                      <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold uppercase text-xs">
+                        {post.authorName.charAt(0)}
+                      </div>
+                      <div>
+                        <div className="font-bold text-slate-900 text-sm">{post.authorName}</div>
+                        <div className="text-[11px] font-semibold text-slate-400 uppercase">
+                          {date.toLocaleDateString()}
+                        </div>
+                      </div>
+                    </div>
+                    <p className="text-slate-700 text-sm leading-relaxed whitespace-pre-wrap line-clamp-3">
+                      {post.content}
+                    </p>
+                  </div>
+                  <div className="bg-slate-50 border-t border-slate-100 px-5 py-3 flex items-center space-x-6 mt-auto">
+                    <div className="flex items-center space-x-1.5 text-slate-500 font-semibold text-sm">
+                      <Heart className="w-4 h-4" />
+                      <span>{post.likes}</span>
+                    </div>
+                    <Link to="/community" className="flex items-center space-x-1.5 text-slate-500 hover:text-slate-900 font-semibold text-sm transition-colors">
+                      <MessageSquare className="w-4 h-4" />
+                      <span>Join Discussion</span>
+                    </Link>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
