@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { api } from '../services/api';
 import type { Player, Team } from '../types';
 import DataTable from '../components/DataTable';
@@ -39,7 +40,9 @@ export default function Players() {
           <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold text-xs border border-slate-200">
             #{player.number}
           </div>
-          <span className="font-bold text-slate-900">{player.name}</span>
+          <Link to={`/players/${player.id}`} className="font-bold text-slate-900 hover:text-blue-600 transition-colors">
+            {player.name}
+          </Link>
         </div>
       ),
       className: 'w-1/3'
@@ -49,10 +52,10 @@ export default function Players() {
       accessor: (player: Player) => {
         const team = getTeam(player.teamId);
         return (
-          <div className="flex items-center space-x-2">
+          <Link to={`/teams/${player.teamId}`} className="flex items-center space-x-2 hover:bg-slate-50 p-1 -ml-1 rounded transition-colors">
             {team?.logo && <img src={team.logo} alt="" className="w-6 h-6 object-contain" />}
-            <span className="text-slate-600 font-semibold uppercase text-xs tracking-wider">{team?.shortName || player.teamId}</span>
-          </div>
+            <span className="text-slate-600 font-semibold uppercase text-xs tracking-wider hover:text-blue-600 transition-colors">{team?.shortName || player.teamId}</span>
+          </Link>
         );
       },
     },
