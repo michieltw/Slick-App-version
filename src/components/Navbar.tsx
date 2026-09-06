@@ -8,6 +8,7 @@ export default function Navbar() {
   const { user, logout } = useAuth();
 
   const navLinks = [
+    { name: 'Schedule', path: '/schedule' },
     { name: 'Standings', path: '/standings' },
     { name: 'Teams', path: '/teams' },
     { name: 'Players', path: '/players' },

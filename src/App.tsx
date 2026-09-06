@@ -9,6 +9,8 @@ import Players from './pages/Players';
 import PlayerProfile from './pages/PlayerProfile';
 import Venues from './pages/Venues';
 import Login from './pages/Login';
+import Schedule from './pages/Schedule';
+import Scorekeeper from './pages/Scorekeeper';
 import { AuthProvider } from './contexts/AuthContext';
 
 function App() {
@@ -19,6 +21,8 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/schedule" element={<Schedule />} />
+            <Route path="/games/:id/scorekeeper" element={<Scorekeeper />} />
             <Route path="/teams" element={<Teams />} />
             <Route path="/teams/:id" element={<TeamDetail />} />
             <Route path="/standings" element={<Standings />} />
