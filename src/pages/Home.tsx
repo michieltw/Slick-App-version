@@ -12,7 +12,7 @@ export default function Home() {
     async function loadData() {
       try {
         const [recentGames, allTeams] = await Promise.all([
-          api.getRecentGames(),
+          api.getGames(),
           api.getTeams()
         ]);
         setGames(recentGames);

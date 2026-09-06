@@ -28,9 +28,12 @@ class ApiService {
       players: data.players.map(p => ({ ...p, createdAt: now, updatedAt: now })),
       venues: data.venues.map(v => ({ ...v, createdAt: now, updatedAt: now })),
       retailers: data.retailers.map(r => ({ ...r, createdAt: now, updatedAt: now })),
-      recentGames: data.recentGames.map(g => ({ ...g, createdAt: now, updatedAt: now })),
+      games: (data as any).recentGames.map((g: any) => ({ ...g, period: 3, clock: '0:00', createdAt: now, updatedAt: now })),
       standings: data.standings.map(s => ({ ...s, updatedAt: now }))
     };
+
+    // Remove the old property to align with new interface if it's there
+    delete (seedData as any).recentGames;
 
     localStorage.setItem(DB_KEY, JSON.stringify(seedData));
     return seedData;
@@ -128,9 +131,25 @@ class ApiService {
     return db.retailers;
   }
 
-  async getRecentGames(): Promise<Game[]> {
+  async getGames(): Promise<Game[]> {
     const db = await this.getDatabase();
-    return db.recentGames;
+    return db.games || [];
+  }
+
+  async getGameById(id: string): Promise<Game | undefined> {
+    const db = await this.getDatabase();
+    return db.games?.find(g => g.id === id);
+  }
+
+  async updateGame(game: Game): Promise<Game> {
+    const db = await this.getDatabase();
+    const index = db.games.findIndex(g => g.id === game.id);
+    if (index === -1) throw new Error('Game not found');
+
+    const updatedGame = { ...game, updatedAt: new Date().toISOString() };
+    db.games[index] = updatedGame;
+    await this.saveDatabase(db);
+    return updatedGame;
   }
 }
 

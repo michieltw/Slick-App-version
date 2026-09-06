@@ -59,7 +59,9 @@ export interface Game extends BaseEntity {
   awayTeamId: string;
   homeScore: number;
   awayScore: number;
-  status: string;
+  status: string; // e.g. 'Scheduled', 'In Progress', 'Final'
+  period?: number; // Current period
+  clock?: string; // e.g. '20:00'
 }
 
 export type Role = 'admin' | 'manager' | 'player' | 'fan';
@@ -77,5 +79,5 @@ export interface Database {
   standings: Standing[];
   venues: Venue[];
   retailers: Retailer[];
-  recentGames: Game[];
+  games: Game[];
 }
