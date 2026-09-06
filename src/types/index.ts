@@ -79,9 +79,27 @@ export interface User extends BaseEntity {
   teamId?: string; // If role is manager or player, what team are they assigned to
 }
 
+export interface Comment extends BaseEntity {
+  postId: string;
+  authorId: string;
+  authorName: string;
+  content: string;
+}
+
+export interface Post extends BaseEntity {
+  authorId: string;
+  authorName: string;
+  authorRole: Role;
+  authorTeamId?: string;
+  content: string;
+  likes: number;
+}
+
 export interface Database {
   users: User[];
   leagues: League[];
+  posts: Post[];
+  comments: Comment[];
   teams: Team[];
   players: Player[];
   standings: Standing[];

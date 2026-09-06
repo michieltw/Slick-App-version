@@ -11,6 +11,7 @@ import Venues from './pages/Venues';
 import Login from './pages/Login';
 import Schedule from './pages/Schedule';
 import Scorekeeper from './pages/Scorekeeper';
+import Community from './pages/Community';
 import { AuthProvider } from './contexts/AuthContext';
 
 function App() {
@@ -21,6 +22,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/community" element={<Community />} />
             <Route path="/schedule" element={<Schedule />} />
             <Route path="/games/:id/scorekeeper" element={<Scorekeeper />} />
             <Route path="/teams" element={<Teams />} />

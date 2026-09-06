@@ -6,6 +6,7 @@ export default function Navbar() {
   const { user, logout } = useAuth();
 
   const navLinks = [
+    { name: 'Community', path: '/community' },
     { name: 'Schedule', path: '/schedule' },
     { name: 'Standings', path: '/standings' },
     { name: 'Teams', path: '/teams' },

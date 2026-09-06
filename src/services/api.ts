@@ -1,4 +1,4 @@
-import type { Database, Team, Player, Standing, Venue, Retailer, Game, User, League } from '../types';
+import type { Database, Team, Player, Standing, Venue, Retailer, Game, User, League, Post, Comment } from '../types';
 
 const DB_KEY = 'bnlplay_db';
 
@@ -32,6 +32,13 @@ class ApiService {
         { id: 'u4', username: 'Fan Account', role: 'fan', createdAt: now, updatedAt: now }
       ] as User[],
       leagues: mockLeagues,
+      posts: [
+        { id: 'post1', authorId: 'u2', authorName: 'Flyers Manager', authorRole: 'manager', authorTeamId: 't1', content: 'Great win tonight boys! The fans were amazing.', likes: 12, createdAt: now, updatedAt: now },
+        { id: 'post2', authorId: 'u1', authorName: 'League Admin', authorRole: 'admin', content: 'Welcome to the new Benelux Play app. Report any bugs to support.', likes: 5, createdAt: now, updatedAt: now }
+      ] as Post[],
+      comments: [
+        { id: 'c1', postId: 'post1', authorId: 'u4', authorName: 'Fan Account', content: 'Incredible game!!', createdAt: now, updatedAt: now }
+      ] as Comment[],
       teams: data.teams.map((t, idx) => ({
         ...t,
         leagueId: idx % 2 === 0 ? 'l1' : 'l2', // Mock associate teams with leagues
@@ -229,6 +236,64 @@ class ApiService {
     db.games[index] = updatedGame;
     await this.saveDatabase(db);
     return updatedGame;
+  }
+
+  async getPosts(): Promise<Post[]> {
+    const db = await this.getDatabase();
+    return [...(db.posts || [])].sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+  }
+
+  async getPostsByTeamId(teamId: string): Promise<Post[]> {
+    const db = await this.getDatabase();
+    return (db.posts || [])
+      .filter(p => p.authorTeamId === teamId)
+      .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+  }
+
+  async createPost(post: Omit<Post, 'id' | 'createdAt' | 'updatedAt'>): Promise<Post> {
+    const db = await this.getDatabase();
+    const now = new Date().toISOString();
+    const newPost: Post = {
+      ...post,
+      id: `post_${Date.now()}`,
+      createdAt: now,
+      updatedAt: now,
+    };
+    if (!db.posts) db.posts = [];
+    db.posts.push(newPost);
+    await this.saveDatabase(db);
+    return newPost;
+  }
+
+  async updatePost(post: Post): Promise<Post> {
+    const db = await this.getDatabase();
+    const index = db.posts.findIndex(p => p.id === post.id);
+    if (index === -1) throw new Error('Post not found');
+
+    const updatedPost = { ...post, updatedAt: new Date().toISOString() };
+    db.posts[index] = updatedPost;
+    await this.saveDatabase(db);
+    return updatedPost;
+  }
+
+  async getCommentsByPostId(postId: string): Promise<Comment[]> {
+    const db = await this.getDatabase();
+    return (db.comments || []).filter(c => c.postId === postId);
+  }
+
+  async createComment(comment: Omit<Comment, 'id' | 'createdAt' | 'updatedAt'>): Promise<Comment> {
+    const db = await this.getDatabase();
+    const now = new Date().toISOString();
+    const newComment: Comment = {
+      ...comment,
+      id: `c_${Date.now()}`,
+      createdAt: now,
+      updatedAt: now,
+    };
+    if (!db.comments) db.comments = [];
+    db.comments.push(newComment);
+    await this.saveDatabase(db);
+    return newComment;
   }
 }
 
