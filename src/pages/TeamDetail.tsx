@@ -1,17 +1,29 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 import type { Team, Player } from '../types';
 import DataTable from '../components/DataTable';
-import { MapPin, Calendar, Plus, Trash2 } from 'lucide-react';
+import { MapPin, Calendar, Plus, Trash2, Edit2, Save, X } from 'lucide-react';
 
 export default function TeamDetail() {
   const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
+
   const [team, setTeam] = useState<Team | null>(null);
   const [roster, setRoster] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Roster Builder state (Mocking Manager/Admin role)
+  // Authorization checks
+  const isAdmin = user?.role === 'admin';
+  const isManagerForThisTeam = user?.role === 'manager' && user.teamId === id;
+  const canEditTeam = isAdmin || isManagerForThisTeam;
+
+  // Team Editing state
+  const [isEditingTeam, setIsEditingTeam] = useState(false);
+  const [editTeamForm, setEditTeamForm] = useState<Partial<Team>>({});
+
+  // Roster Builder state
   const [isEditingRoster, setIsEditingRoster] = useState(false);
   const [newPlayerName, setNewPlayerName] = useState('');
   const [newPlayerPos, setNewPlayerPos] = useState('F');
@@ -68,6 +80,17 @@ export default function TeamDetail() {
     }
   };
 
+  const handleUpdateTeam = async () => {
+    if (!team) return;
+    try {
+      const updated = await api.updateTeam({ ...team, ...editTeamForm } as Team);
+      setTeam(updated);
+      setIsEditingTeam(false);
+    } catch (error) {
+      console.error('Failed to update team', error);
+    }
+  };
+
   if (loading) return <div className="text-center py-20 text-slate-500 font-medium">Loading team...</div>;
   if (!team) return <div className="text-center py-20 text-slate-500 font-medium">Team not found</div>;
 
@@ -109,31 +132,90 @@ export default function TeamDetail() {
   return (
     <div className="max-w-[1400px] mx-auto px-4 md:px-8 py-8 space-y-8">
       {/* Team Header */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-8 flex flex-col md:flex-row items-center md:items-start gap-8 shadow-sm">
-        {team.logo && (
-          <img src={team.logo} alt={team.name} className="w-32 h-32 md:w-48 md:h-48 object-contain bg-slate-50 rounded-xl p-4 border border-slate-100" />
+      <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm relative group">
+        {canEditTeam && !isEditingTeam && (
+          <button
+            onClick={() => {
+              setEditTeamForm({ name: team.name, shortName: team.shortName, city: team.city, country: team.country, arena: team.arena, logo: team.logo });
+              setIsEditingTeam(true);
+            }}
+            className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-50 rounded-full transition-colors opacity-0 group-hover:opacity-100"
+            title="Edit Team Configuration"
+          >
+            <Edit2 className="w-5 h-5" />
+          </button>
         )}
-        <div className="flex-1 text-center md:text-left space-y-4">
-          <div>
-            <h1 className="text-4xl font-black italic tracking-tighter uppercase text-slate-900">{team.name}</h1>
-            <p className="text-xl font-bold text-slate-500 mt-1 uppercase tracking-wider">{team.shortName}</p>
-          </div>
 
-          <div className="flex flex-wrap items-center justify-center md:justify-start gap-6 text-sm font-semibold text-slate-600">
-            <div className="flex items-center">
-              <MapPin className="w-4 h-4 mr-2 text-slate-400" />
-              {team.city}, {team.country}
+        {isEditingTeam ? (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center border-b border-slate-100 pb-4">
+              <h2 className="text-xl font-bold text-slate-900">Edit Team Configuration</h2>
+              <button onClick={() => setIsEditingTeam(false)} className="text-slate-400 hover:text-slate-700">
+                <X className="w-5 h-5" />
+              </button>
             </div>
-            <div className="flex items-center">
-              <div className="w-4 h-4 mr-2 border-2 border-slate-400 rounded-sm" /> {/* Mock Arena Icon */}
-              {team.arena}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-500 uppercase">Full Name</label>
+                <input type="text" value={editTeamForm.name || ''} onChange={e => setEditTeamForm({...editTeamForm, name: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-1 focus:ring-slate-900 outline-none" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-500 uppercase">Short Name</label>
+                <input type="text" value={editTeamForm.shortName || ''} onChange={e => setEditTeamForm({...editTeamForm, shortName: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-1 focus:ring-slate-900 outline-none" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-500 uppercase">City</label>
+                <input type="text" value={editTeamForm.city || ''} onChange={e => setEditTeamForm({...editTeamForm, city: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-1 focus:ring-slate-900 outline-none" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-500 uppercase">Country</label>
+                <input type="text" value={editTeamForm.country || ''} onChange={e => setEditTeamForm({...editTeamForm, country: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-1 focus:ring-slate-900 outline-none" />
+              </div>
+              <div className="space-y-1 md:col-span-2">
+                <label className="text-xs font-bold text-slate-500 uppercase">Home Arena</label>
+                <input type="text" value={editTeamForm.arena || ''} onChange={e => setEditTeamForm({...editTeamForm, arena: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-1 focus:ring-slate-900 outline-none" />
+              </div>
+              <div className="space-y-1 md:col-span-2">
+                <label className="text-xs font-bold text-slate-500 uppercase">Logo URL</label>
+                <input type="url" value={editTeamForm.logo || ''} onChange={e => setEditTeamForm({...editTeamForm, logo: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-1 focus:ring-slate-900 outline-none" />
+              </div>
             </div>
-            <div className="flex items-center">
-              <Calendar className="w-4 h-4 mr-2 text-slate-400" />
-              Est. {team.established}
+
+            <div className="flex justify-end pt-4">
+              <button onClick={handleUpdateTeam} className="flex items-center px-6 py-2.5 bg-slate-900 text-white font-bold rounded-lg hover:bg-slate-800 transition-colors">
+                <Save className="w-4 h-4 mr-2" /> Save Changes
+              </button>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="flex flex-col md:flex-row items-center md:items-start gap-8">
+            {team.logo && (
+              <img src={team.logo} alt={team.name} className="w-32 h-32 md:w-48 md:h-48 object-contain bg-slate-50 rounded-xl p-4 border border-slate-100" />
+            )}
+            <div className="flex-1 text-center md:text-left space-y-4">
+              <div>
+                <h1 className="text-4xl font-black italic tracking-tighter uppercase text-slate-900">{team.name}</h1>
+                <p className="text-xl font-bold text-slate-500 mt-1 uppercase tracking-wider">{team.shortName}</p>
+              </div>
+
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-6 text-sm font-semibold text-slate-600">
+                <div className="flex items-center">
+                  <MapPin className="w-4 h-4 mr-2 text-slate-400" />
+                  {team.city}, {team.country}
+                </div>
+                <div className="flex items-center">
+                  <div className="w-4 h-4 mr-2 border-2 border-slate-400 rounded-sm" />
+                  {team.arena}
+                </div>
+                <div className="flex items-center">
+                  <Calendar className="w-4 h-4 mr-2 text-slate-400" />
+                  Est. {team.established}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Roster Section */}
@@ -141,16 +223,18 @@ export default function TeamDetail() {
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
           <h2 className="text-2xl font-black italic tracking-tighter uppercase text-slate-900">Current Roster</h2>
 
-          <button
-            onClick={() => setIsEditingRoster(!isEditingRoster)}
-            className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${
-              isEditingRoster
-                ? 'bg-slate-900 text-white'
-                : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
-            }`}
-          >
-            {isEditingRoster ? 'Done Editing' : 'Edit Roster (Manager)'}
-          </button>
+          {canEditTeam && (
+            <button
+              onClick={() => setIsEditingRoster(!isEditingRoster)}
+              className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${
+                isEditingRoster
+                  ? 'bg-slate-900 text-white'
+                  : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
+              }`}
+            >
+              {isEditingRoster ? 'Done Editing' : 'Edit Roster'}
+            </button>
+          )}
         </div>
 
         {isEditingRoster && (
