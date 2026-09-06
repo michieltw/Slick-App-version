@@ -1,25 +1,37 @@
 import type { Database, Team, Player, Standing, Venue, Retailer, Game } from '../types';
 
+const DB_KEY = 'bnlplay_db';
+
 class ApiService {
-  private data: Database | null = null;
-  private fetchPromise: Promise<Database> | null = null;
-
   private async getDatabase(): Promise<Database> {
-    if (this.data) return this.data;
-
-    if (!this.fetchPromise) {
-      this.fetchPromise = fetch('/data/db.json')
-        .then(res => {
-          if (!res.ok) throw new Error('Failed to fetch database');
-          return res.json();
-        })
-        .then(data => {
-          this.data = data;
-          return data;
-        });
+    const stored = localStorage.getItem(DB_KEY);
+    if (stored) {
+      return JSON.parse(stored);
     }
 
-    return this.fetchPromise;
+    // Seed database if empty
+    const res = await fetch('/data/db.json');
+    if (!res.ok) throw new Error('Failed to fetch initial database');
+    const data: Database = await res.json();
+
+    // Add timestamps to seeded data
+    const now = new Date().toISOString();
+    const seedData = {
+      ...data,
+      teams: data.teams.map(t => ({ ...t, createdAt: now, updatedAt: now })),
+      players: data.players.map(p => ({ ...p, createdAt: now, updatedAt: now })),
+      venues: data.venues.map(v => ({ ...v, createdAt: now, updatedAt: now })),
+      retailers: data.retailers.map(r => ({ ...r, createdAt: now, updatedAt: now })),
+      recentGames: data.recentGames.map(g => ({ ...g, createdAt: now, updatedAt: now })),
+      standings: data.standings.map(s => ({ ...s, updatedAt: now }))
+    };
+
+    localStorage.setItem(DB_KEY, JSON.stringify(seedData));
+    return seedData;
+  }
+
+  private async saveDatabase(data: Database): Promise<void> {
+    localStorage.setItem(DB_KEY, JSON.stringify(data));
   }
 
   async getTeams(): Promise<Team[]> {
@@ -35,6 +47,47 @@ class ApiService {
   async getPlayers(): Promise<Player[]> {
     const db = await this.getDatabase();
     return db.players;
+  }
+
+  async getPlayerById(id: string): Promise<Player | undefined> {
+    const db = await this.getDatabase();
+    return db.players.find(p => p.id === id);
+  }
+
+  async getPlayersByTeamId(teamId: string): Promise<Player[]> {
+    const db = await this.getDatabase();
+    return db.players.filter(p => p.teamId === teamId);
+  }
+
+  async updatePlayer(player: Player): Promise<Player> {
+    const db = await this.getDatabase();
+    const index = db.players.findIndex(p => p.id === player.id);
+    if (index === -1) throw new Error('Player not found');
+
+    const updatedPlayer = { ...player, updatedAt: new Date().toISOString() };
+    db.players[index] = updatedPlayer;
+    await this.saveDatabase(db);
+    return updatedPlayer;
+  }
+
+  async createPlayer(player: Omit<Player, 'id' | 'createdAt' | 'updatedAt'>): Promise<Player> {
+    const db = await this.getDatabase();
+    const now = new Date().toISOString();
+    const newPlayer: Player = {
+      ...player,
+      id: `p_${Date.now()}`,
+      createdAt: now,
+      updatedAt: now,
+    };
+    db.players.push(newPlayer);
+    await this.saveDatabase(db);
+    return newPlayer;
+  }
+
+  async removePlayer(id: string): Promise<void> {
+    const db = await this.getDatabase();
+    db.players = db.players.filter(p => p.id !== id);
+    await this.saveDatabase(db);
   }
 
   async getStandings(): Promise<Standing[]> {

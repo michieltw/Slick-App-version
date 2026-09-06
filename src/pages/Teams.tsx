@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { api } from '../services/api';
 import type { Team } from '../types';
 import DataTable from '../components/DataTable';
@@ -27,13 +28,13 @@ export default function Teams() {
     {
       header: 'TEAM',
       accessor: (team: Team) => (
-        <div className="flex items-center space-x-4 py-1">
+        <Link to={`/teams/${team.id}`} className="flex items-center space-x-4 py-2 hover:bg-slate-50 transition-colors rounded-lg -ml-2 p-2">
           <img src={team.logo} alt={team.name} className="w-10 h-10 object-contain" />
           <div>
-            <div className="font-bold text-slate-900">{team.name}</div>
+            <div className="font-bold text-slate-900 hover:text-blue-600 transition-colors">{team.name}</div>
             <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">{team.city}, {team.country}</div>
           </div>
-        </div>
+        </Link>
       ),
       className: 'w-1/2'
     },

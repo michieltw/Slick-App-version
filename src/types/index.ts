@@ -1,5 +1,10 @@
-export interface Team {
+export interface BaseEntity {
   id: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface Team extends BaseEntity {
   name: string;
   shortName: string;
   country: string;
@@ -9,8 +14,7 @@ export interface Team {
   logo: string;
 }
 
-export interface Player {
-  id: string;
+export interface Player extends BaseEntity {
   name: string;
   teamId: string;
   position: string;
@@ -19,6 +23,7 @@ export interface Player {
   goals: number;
   assists: number;
   points: number;
+  bio?: string;
 }
 
 export interface Standing {
@@ -30,10 +35,10 @@ export interface Standing {
   points: number;
   goalsFor: number;
   goalsAgainst: number;
+  updatedAt?: string;
 }
 
-export interface Venue {
-  id: string;
+export interface Venue extends BaseEntity {
   name: string;
   city: string;
   country: string;
@@ -41,16 +46,14 @@ export interface Venue {
   type: string;
 }
 
-export interface Retailer {
-  id: string;
+export interface Retailer extends BaseEntity {
   name: string;
   city?: string;
   website: string;
   description: string;
 }
 
-export interface Game {
-  id: string;
+export interface Game extends BaseEntity {
   date: string;
   homeTeamId: string;
   awayTeamId: string;
