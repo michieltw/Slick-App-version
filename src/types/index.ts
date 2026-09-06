@@ -62,7 +62,16 @@ export interface Game extends BaseEntity {
   status: string;
 }
 
+export type Role = 'admin' | 'manager' | 'player' | 'fan';
+
+export interface User extends BaseEntity {
+  username: string;
+  role: Role;
+  teamId?: string; // If role is manager or player, what team are they assigned to
+}
+
 export interface Database {
+  users: User[];
   teams: Team[];
   players: Player[];
   standings: Standing[];

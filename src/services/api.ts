@@ -1,4 +1,4 @@
-import type { Database, Team, Player, Standing, Venue, Retailer, Game } from '../types';
+import type { Database, Team, Player, Standing, Venue, Retailer, Game, User } from '../types';
 
 const DB_KEY = 'bnlplay_db';
 
@@ -18,6 +18,12 @@ class ApiService {
     const now = new Date().toISOString();
     const seedData = {
       ...data,
+      users: [
+        { id: 'u1', username: 'League Admin', role: 'admin', createdAt: now, updatedAt: now },
+        { id: 'u2', username: 'Flyers Manager', role: 'manager', teamId: 't1', createdAt: now, updatedAt: now },
+        { id: 'u3', username: 'Bulldogs Manager', role: 'manager', teamId: 't2', createdAt: now, updatedAt: now },
+        { id: 'u4', username: 'Fan Account', role: 'fan', createdAt: now, updatedAt: now }
+      ] as User[],
       teams: data.teams.map(t => ({ ...t, createdAt: now, updatedAt: now })),
       players: data.players.map(p => ({ ...p, createdAt: now, updatedAt: now })),
       venues: data.venues.map(v => ({ ...v, createdAt: now, updatedAt: now })),
@@ -34,6 +40,11 @@ class ApiService {
     localStorage.setItem(DB_KEY, JSON.stringify(data));
   }
 
+  async getUsers(): Promise<User[]> {
+    const db = await this.getDatabase();
+    return db.users;
+  }
+
   async getTeams(): Promise<Team[]> {
     const db = await this.getDatabase();
     return db.teams;
@@ -42,6 +53,17 @@ class ApiService {
   async getTeamById(id: string): Promise<Team | undefined> {
     const db = await this.getDatabase();
     return db.teams.find(t => t.id === id);
+  }
+
+  async updateTeam(team: Team): Promise<Team> {
+    const db = await this.getDatabase();
+    const index = db.teams.findIndex(t => t.id === team.id);
+    if (index === -1) throw new Error('Team not found');
+
+    const updatedTeam = { ...team, updatedAt: new Date().toISOString() };
+    db.teams[index] = updatedTeam;
+    await this.saveDatabase(db);
+    return updatedTeam;
   }
 
   async getPlayers(): Promise<Player[]> {

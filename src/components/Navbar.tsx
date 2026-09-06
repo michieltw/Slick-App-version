@@ -1,9 +1,11 @@
 import { NavLink } from 'react-router-dom';
 import { Menu, X, ChevronDown } from 'lucide-react';
 import { useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const { user, logout } = useAuth();
 
   const navLinks = [
     { name: 'Standings', path: '/standings' },
@@ -44,12 +46,31 @@ export default function Navbar() {
 
           {/* Desktop Right Side (Auth) */}
           <div className="hidden md:flex items-center space-x-4">
-            <button className="px-4 py-2 text-[15px] font-semibold text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors">
-              Sign Up Free
-            </button>
-            <button className="px-4 py-2 text-[15px] font-semibold text-white bg-slate-900 rounded-md hover:bg-slate-800 transition-colors">
-              Log In
-            </button>
+            {user ? (
+              <div className="flex items-center space-x-4">
+                <span className="text-sm font-semibold text-slate-600">
+                  Hi, {user.username} <span className="text-xs uppercase tracking-wider text-slate-400">({user.role})</span>
+                </span>
+                <button
+                  onClick={logout}
+                  className="px-4 py-2 text-[15px] font-semibold text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
+                >
+                  Log Out
+                </button>
+              </div>
+            ) : (
+              <>
+                <button className="px-4 py-2 text-[15px] font-semibold text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors">
+                  Sign Up Free
+                </button>
+                <NavLink
+                  to="/login"
+                  className="px-4 py-2 text-[15px] font-semibold text-white bg-slate-900 rounded-md hover:bg-slate-800 transition-colors"
+                >
+                  Log In
+                </NavLink>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -85,12 +106,35 @@ export default function Navbar() {
               </NavLink>
             ))}
             <div className="pt-4 mt-2 border-t border-slate-100 space-y-2">
-              <button className="w-full text-center px-4 py-2 text-[15px] font-semibold text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50">
-                Sign Up Free
-              </button>
-              <button className="w-full text-center px-4 py-2 text-[15px] font-semibold text-white bg-slate-900 rounded-md hover:bg-slate-800">
-                Log In
-              </button>
+              {user ? (
+                <>
+                  <div className="px-3 py-2 text-sm font-semibold text-slate-600">
+                    Hi, {user.username}
+                  </div>
+                  <button
+                    onClick={() => {
+                      logout();
+                      setIsOpen(false);
+                    }}
+                    className="w-full text-center px-4 py-2 text-[15px] font-semibold text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50"
+                  >
+                    Log Out
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button className="w-full text-center px-4 py-2 text-[15px] font-semibold text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50">
+                    Sign Up Free
+                  </button>
+                  <NavLink
+                    to="/login"
+                    onClick={() => setIsOpen(false)}
+                    className="block w-full text-center px-4 py-2 text-[15px] font-semibold text-white bg-slate-900 rounded-md hover:bg-slate-800"
+                  >
+                    Log In
+                  </NavLink>
+                </>
+              )}
             </div>
           </div>
         </div>
