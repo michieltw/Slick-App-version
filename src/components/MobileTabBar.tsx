@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { Home, Calendar, Trophy, Users, MapPin, MessageSquare, LogIn, LogOut } from 'lucide-react';
+import { Home, Calendar, Trophy, Users, MapPin, MessageSquare, LogIn, LogOut, ShieldAlert } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -37,6 +37,23 @@ export default function MobileTabBar() {
             <div className="px-4 py-2 mb-2 border-b border-slate-100 text-sm font-semibold text-slate-500">
               Logged in as <span className="text-slate-900 font-bold">{user.username}</span>
             </div>
+          )}
+
+          {user?.role === 'admin' && (
+            <NavLink
+              to="/admin"
+              onClick={() => setShowMore(false)}
+              className={({ isActive }) =>
+                `flex items-center space-x-3 px-4 py-3 rounded-xl font-bold transition-colors ${
+                  isActive
+                    ? 'bg-rose-100 text-rose-700'
+                    : 'text-rose-600 hover:bg-rose-50'
+                }`
+              }
+            >
+              <ShieldAlert className="w-5 h-5" />
+              <span>Admin</span>
+            </NavLink>
           )}
 
           {secondaryLinks.map((link) => {

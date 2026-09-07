@@ -18,9 +18,17 @@ class ApiService {
     const now = new Date().toISOString();
 
     // Create mock leagues
+    const defaultRules = {
+      pointsForWin: 3, // Modern IIHF standard
+      pointsForOTWin: 2,
+      pointsForTie: 1, // Rare but supported
+      pointsForOTLoss: 1,
+      periodCount: 3
+    };
+
     const mockLeagues: League[] = [
-      { id: 'l1', name: 'Benelux Super League', shortName: 'BSL', region: 'Benelux', createdAt: now, updatedAt: now },
-      { id: 'l2', name: 'Eredivisie', shortName: 'ERE', region: 'Netherlands', createdAt: now, updatedAt: now }
+      { id: 'l1', name: 'Benelux Super League', shortName: 'BSL', region: 'Benelux', rules: { ...defaultRules }, createdAt: now, updatedAt: now },
+      { id: 'l2', name: 'Eredivisie', shortName: 'ERE', region: 'Netherlands', rules: { ...defaultRules, pointsForWin: 2 }, createdAt: now, updatedAt: now }
     ];
 
     const seedData = {
@@ -71,6 +79,17 @@ class ApiService {
   async getLeagues(): Promise<League[]> {
     const db = await this.getDatabase();
     return db.leagues;
+  }
+
+  async updateLeague(league: League): Promise<League> {
+    const db = await this.getDatabase();
+    const index = db.leagues.findIndex(l => l.id === league.id);
+    if (index === -1) throw new Error('League not found');
+
+    const updatedLeague = { ...league, updatedAt: new Date().toISOString() };
+    db.leagues[index] = updatedLeague;
+    await this.saveDatabase(db);
+    return updatedLeague;
   }
 
   async getTeams(): Promise<Team[]> {
@@ -173,26 +192,38 @@ class ApiService {
         awayStanding.goalsFor += game.awayScore;
         awayStanding.goalsAgainst += game.homeScore;
 
+        // Get League rules for point calculation based on home team's league
+        // We assume away team is in same league
+        const homeTeam = db.teams.find(t => t.id === game.homeTeamId);
+        const league = db.leagues.find(l => l.id === homeTeam?.leagueId);
+        const rules = league?.rules || { pointsForWin: 2, pointsForOTWin: 2, pointsForOTLoss: 1, pointsForTie: 1, periodCount: 3 };
+
+        const isOT = game.period && game.period > rules.periodCount;
+
         if (game.homeScore > game.awayScore) {
           homeStanding.wins += 1;
-          homeStanding.points += 2;
+          homeStanding.points += isOT ? rules.pointsForOTWin : rules.pointsForWin;
 
-          if (game.period && game.period > 3) {
+          if (isOT) {
              awayStanding.otLosses += 1;
-             awayStanding.points += 1;
+             awayStanding.points += rules.pointsForOTLoss;
           } else {
              awayStanding.losses += 1;
           }
-        } else {
+        } else if (game.awayScore > game.homeScore) {
           awayStanding.wins += 1;
-          awayStanding.points += 2;
+          awayStanding.points += isOT ? rules.pointsForOTWin : rules.pointsForWin;
 
-          if (game.period && game.period > 3) {
+          if (isOT) {
              homeStanding.otLosses += 1;
-             homeStanding.points += 1;
+             homeStanding.points += rules.pointsForOTLoss;
           } else {
              homeStanding.losses += 1;
           }
+        } else {
+          // Tie
+          homeStanding.points += rules.pointsForTie;
+          awayStanding.points += rules.pointsForTie;
         }
       }
     });

@@ -51,6 +51,14 @@ export default function Navbar() {
                 <span className="text-sm font-semibold text-slate-600">
                   Hi, {user.username} <span className="text-xs uppercase tracking-wider text-slate-400">({user.role})</span>
                 </span>
+                {user.role === 'admin' && (
+                  <NavLink
+                    to="/admin"
+                    className="px-4 py-2 text-[13px] font-bold text-rose-600 bg-rose-50 rounded-md hover:bg-rose-100 transition-colors"
+                  >
+                    Admin
+                  </NavLink>
+                )}
                 <button
                   onClick={logout}
                   className="px-4 py-2 text-[15px] font-semibold text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"

@@ -12,6 +12,7 @@ import Login from './pages/Login';
 import Schedule from './pages/Schedule';
 import Scorekeeper from './pages/Scorekeeper';
 import Community from './pages/Community';
+import AdminDashboard from './pages/AdminDashboard';
 import { AuthProvider } from './contexts/AuthContext';
 
 function App() {
@@ -22,6 +23,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/community" element={<Community />} />
             <Route path="/schedule" element={<Schedule />} />
             <Route path="/games/:id/scorekeeper" element={<Scorekeeper />} />

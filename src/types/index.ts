@@ -4,10 +4,19 @@ export interface BaseEntity {
   updatedAt?: string;
 }
 
+export interface LeagueRules {
+  pointsForWin: number;
+  pointsForOTWin: number;
+  pointsForTie: number;
+  pointsForOTLoss: number;
+  periodCount: number;
+}
+
 export interface League extends BaseEntity {
   name: string;
   shortName: string;
   region: string;
+  rules: LeagueRules;
 }
 
 export interface Team extends BaseEntity {
