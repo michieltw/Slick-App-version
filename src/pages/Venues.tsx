@@ -1,3 +1,4 @@
+import LoadingSpinner from "../components/LoadingSpinner";
 import { useEffect, useState } from 'react';
 import { api } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -88,7 +89,7 @@ export default function Venues() {
     }
   };
 
-  if (loading) return <div className="text-center py-20 text-slate-500 font-medium">Loading information...</div>;
+  if (loading) return <LoadingSpinner />;
 
   const venueColumns = [
     {

@@ -1,3 +1,4 @@
+import LoadingSpinner from "../components/LoadingSpinner";
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api } from '../services/api';
@@ -52,8 +53,8 @@ export default function PlayerProfile() {
     }
   };
 
-  if (loading) return <div className="text-center py-20 text-slate-500 font-medium">Loading profile...</div>;
-  if (!player) return <div className="text-center py-20 text-slate-500 font-medium">Player not found</div>;
+  if (loading) return <LoadingSpinner />;
+  if (!player) return <LoadingSpinner />;
 
   return (
     <div className="max-w-[1400px] mx-auto px-4 md:px-8 py-8 space-y-8">

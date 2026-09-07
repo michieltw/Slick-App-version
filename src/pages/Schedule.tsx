@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react';
+import LoadingSpinner from "../components/LoadingSpinner";
+import { useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../services/api';
 import type { Game, Team } from '../types';
 import { Calendar as CalendarIcon, Clock } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { usePolling } from '../hooks/usePolling';
 
 export default function Schedule() {
   const [games, setGames] = useState<Game[]>([]);
@@ -11,27 +13,26 @@ export default function Schedule() {
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
 
-  useEffect(() => {
-    async function loadData() {
-      try {
-        const [gamesData, teamsData] = await Promise.all([
-          api.getGames(),
-          api.getTeams()
-        ]);
-        setGames(gamesData);
-        setTeams(teamsData);
-      } catch (error) {
-        console.error('Failed to load schedule', error);
-      } finally {
-        setLoading(false);
-      }
+  const loadData = useCallback(async () => {
+    try {
+      const [gamesData, teamsData] = await Promise.all([
+        api.getGames(),
+        api.getTeams()
+      ]);
+      setGames(gamesData);
+      setTeams(teamsData);
+    } catch (error) {
+      console.error('Failed to load schedule', error);
+    } finally {
+      if (loading) setLoading(false);
     }
-    loadData();
-  }, []);
+  }, [loading]);
+
+  usePolling(loadData, 5000);
 
   const getTeam = (id: string) => teams.find(t => t.id === id);
 
-  if (loading) return <div className="text-center py-20 text-slate-500 font-medium">Loading schedule...</div>;
+  if (loading) return <LoadingSpinner />;
 
   return (
     <div className="max-w-[1400px] mx-auto px-4 md:px-8 py-8 space-y-6">

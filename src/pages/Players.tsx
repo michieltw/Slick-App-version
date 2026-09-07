@@ -1,3 +1,4 @@
+import LoadingSpinner from "../components/LoadingSpinner";
 import { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../services/api';
@@ -54,7 +55,7 @@ export default function Players() {
 
   const getTeam = (id: string) => teams.find(t => t.id === id);
 
-  if (loading) return <div className="text-center py-20 text-slate-500 font-medium">Loading players...</div>;
+  if (loading) return <LoadingSpinner />;
 
   const columns = [
     {

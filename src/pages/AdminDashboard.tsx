@@ -1,3 +1,4 @@
+import LoadingSpinner from "../components/LoadingSpinner";
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
@@ -58,7 +59,7 @@ export default function AdminDashboard() {
     }
   };
 
-  if (loading || !user || user.role !== 'admin') return <div className="text-center py-20 text-slate-500 font-medium">Loading secure area...</div>;
+  if (loading || !user || user.role !== 'admin') return <LoadingSpinner />;
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
