@@ -1,7 +1,9 @@
-import { useEffect, useState, useMemo } from 'react';
+import LoadingSpinner from "../components/LoadingSpinner";
+import { useState, useMemo, useCallback } from 'react';
 import { api } from '../services/api';
 import type { Standing, Team, League } from '../types';
 import DataTable from '../components/DataTable';
+import { usePolling } from '../hooks/usePolling';
 
 export default function Standings() {
   const [standings, setStandings] = useState<Standing[]>([]);
@@ -10,29 +12,28 @@ export default function Standings() {
   const [activeLeagueId, setActiveLeagueId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function loadData() {
-      try {
-        const [standingsData, teamsData, leaguesData] = await Promise.all([
-          api.getStandings(),
-          api.getTeams(),
-          api.getLeagues()
-        ]);
-        setStandings(standingsData);
-        setTeams(teamsData);
-        setLeagues(leaguesData);
+  const loadData = useCallback(async () => {
+    try {
+      const [standingsData, teamsData, leaguesData] = await Promise.all([
+        api.getStandings(),
+        api.getTeams(),
+        api.getLeagues()
+      ]);
+      setStandings(standingsData);
+      setTeams(teamsData);
+      setLeagues(leaguesData);
 
-        if (leaguesData.length > 0) {
-          setActiveLeagueId(leaguesData[0].id);
-        }
-      } catch (error) {
-        console.error('Failed to load standings', error);
-      } finally {
-        setLoading(false);
+      if (leaguesData.length > 0 && !activeLeagueId) {
+        setActiveLeagueId(leaguesData[0].id);
       }
+
+      setLoading(false);
+    } catch (error) {
+      console.error('Failed to load standings', error);
     }
-    loadData();
-  }, []);
+  }, [activeLeagueId]);
+
+  usePolling(loadData, 5000);
 
   const getTeam = (id: string) => teams.find(t => t.id === id);
 
@@ -42,7 +43,7 @@ export default function Standings() {
     return standings.filter(s => leagueTeamIds.has(s.teamId)).sort((a, b) => b.points - a.points);
   }, [standings, teams, activeLeagueId]);
 
-  if (loading) return <div className="text-center py-20 text-slate-500 font-medium">Loading standings...</div>;
+  if (loading) return <LoadingSpinner />;
 
 
   const columns = [

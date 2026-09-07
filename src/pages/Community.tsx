@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react';
+import LoadingSpinner from "../components/LoadingSpinner";
+import { useState, useCallback } from 'react';
 import { api } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import type { Post, Comment } from '../types';
 import { MessageSquare, Heart, Send } from 'lucide-react';
+import { usePolling } from '../hooks/usePolling';
 
 export default function Community() {
   const { user } = useAuth();
@@ -17,26 +19,24 @@ export default function Community() {
   const [activeCommentPost, setActiveCommentPost] = useState<string | null>(null);
   const [newCommentContent, setNewCommentContent] = useState('');
 
-  useEffect(() => {
-    async function loadPosts() {
-      try {
-        const postsData = await api.getPosts();
-        setPosts(postsData);
+  const loadPosts = useCallback(async () => {
+    try {
+      const postsData = await api.getPosts();
+      setPosts(postsData);
 
-        const commentsRecord: Record<string, Comment[]> = {};
-        await Promise.all(postsData.map(async (post) => {
-          commentsRecord[post.id] = await api.getCommentsByPostId(post.id);
-        }));
-        setCommentsByPost(commentsRecord);
-      } catch (error) {
-        console.error('Failed to load posts', error);
-      } finally {
-        setLoading(false);
-      }
+      const commentsRecord: Record<string, Comment[]> = {};
+      await Promise.all(postsData.map(async (post) => {
+        commentsRecord[post.id] = await api.getCommentsByPostId(post.id);
+      }));
+      setCommentsByPost(commentsRecord);
+    } catch (error) {
+      console.error('Failed to load posts', error);
+    } finally {
+      if (loading) setLoading(false);
     }
+  }, [loading]);
 
-    loadPosts();
-  }, []);
+  usePolling(loadPosts, 3000);
 
   const handleCreatePost = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,7 +91,7 @@ export default function Community() {
     }
   };
 
-  if (loading) return <div className="text-center py-20 text-slate-500 font-medium">Loading community...</div>;
+  if (loading) return <LoadingSpinner />;
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8 space-y-8">

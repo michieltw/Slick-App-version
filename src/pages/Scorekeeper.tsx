@@ -1,3 +1,4 @@
+import LoadingSpinner from "../components/LoadingSpinner";
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
@@ -75,8 +76,8 @@ export default function Scorekeeper() {
     }
   };
 
-  if (loading) return <div className="text-center py-20 text-slate-500 font-medium">Loading scorekeeper...</div>;
-  if (!game || !homeTeam || !awayTeam) return <div className="text-center py-20 text-slate-500 font-medium">Data error.</div>;
+  if (loading) return <LoadingSpinner />;
+  if (!game || !homeTeam || !awayTeam) return <LoadingSpinner />;
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">

@@ -1,3 +1,4 @@
+import LoadingSpinner from "../components/LoadingSpinner";
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
@@ -29,7 +30,7 @@ export default function Login() {
     navigate('/');
   };
 
-  if (loading) return <div className="text-center py-20 text-slate-500 font-medium">Loading login options...</div>;
+  if (loading) return <LoadingSpinner />;
 
   return (
     <div className="max-w-xl mx-auto px-4 py-16 space-y-8">

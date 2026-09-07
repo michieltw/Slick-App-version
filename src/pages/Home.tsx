@@ -1,30 +1,31 @@
-import { useEffect, useState } from 'react';
+import LoadingSpinner from "../components/LoadingSpinner";
+import { useState, useCallback } from 'react';
 import { api } from '../services/api';
 import type { Game, Team } from '../types';
 import { Info, ChevronDown } from 'lucide-react';
+import { usePolling } from '../hooks/usePolling';
 
 export default function Home() {
   const [games, setGames] = useState<Game[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function loadData() {
-      try {
-        const [recentGames, allTeams] = await Promise.all([
-          api.getGames(),
-          api.getTeams()
-        ]);
-        setGames(recentGames);
-        setTeams(allTeams);
-      } catch (error) {
-        console.error('Failed to load home data', error);
-      } finally {
-        setLoading(false);
-      }
+  const loadData = useCallback(async () => {
+    try {
+      const [recentGames, allTeams] = await Promise.all([
+        api.getGames(),
+        api.getTeams()
+      ]);
+      setGames(recentGames);
+      setTeams(allTeams);
+    } catch (error) {
+      console.error('Failed to load home data', error);
+    } finally {
+      if (loading) setLoading(false);
     }
-    loadData();
-  }, []);
+  }, [loading]);
+
+  usePolling(loadData, 5000);
 
   const getTeamLogo = (id: string) => {
     const team = teams.find(t => t.id === id);
@@ -38,7 +39,7 @@ export default function Home() {
     return team.name.substring(0, 3).toUpperCase();
   };
 
-  if (loading) return <div className="text-center py-20 text-slate-500 font-medium">Loading...</div>;
+  if (loading) return <LoadingSpinner />;
 
   return (
     <div className="max-w-[1400px] mx-auto px-4 md:px-8 py-8 space-y-12">
