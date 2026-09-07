@@ -243,9 +243,71 @@ class ApiService {
     return db.venues;
   }
 
+  async createVenue(venue: Omit<Venue, 'id' | 'createdAt' | 'updatedAt'>): Promise<Venue> {
+    const db = await this.getDatabase();
+    const now = new Date().toISOString();
+    const newVenue: Venue = {
+      ...venue,
+      id: `v_${Date.now()}`,
+      createdAt: now,
+      updatedAt: now,
+    };
+    db.venues.push(newVenue);
+    await this.saveDatabase(db);
+    return newVenue;
+  }
+
+  async updateVenue(venue: Venue): Promise<Venue> {
+    const db = await this.getDatabase();
+    const index = db.venues.findIndex(v => v.id === venue.id);
+    if (index === -1) throw new Error('Venue not found');
+
+    const updatedVenue = { ...venue, updatedAt: new Date().toISOString() };
+    db.venues[index] = updatedVenue;
+    await this.saveDatabase(db);
+    return updatedVenue;
+  }
+
+  async deleteVenue(id: string): Promise<void> {
+    const db = await this.getDatabase();
+    db.venues = db.venues.filter(v => v.id !== id);
+    await this.saveDatabase(db);
+  }
+
   async getRetailers(): Promise<Retailer[]> {
     const db = await this.getDatabase();
     return db.retailers;
+  }
+
+  async createRetailer(retailer: Omit<Retailer, 'id' | 'createdAt' | 'updatedAt'>): Promise<Retailer> {
+    const db = await this.getDatabase();
+    const now = new Date().toISOString();
+    const newRetailer: Retailer = {
+      ...retailer,
+      id: `r_${Date.now()}`,
+      createdAt: now,
+      updatedAt: now,
+    };
+    db.retailers.push(newRetailer);
+    await this.saveDatabase(db);
+    return newRetailer;
+  }
+
+  async updateRetailer(retailer: Retailer): Promise<Retailer> {
+    const db = await this.getDatabase();
+    const index = db.retailers.findIndex(r => r.id === retailer.id);
+    if (index === -1) throw new Error('Retailer not found');
+
+    const updatedRetailer = { ...retailer, updatedAt: new Date().toISOString() };
+    db.retailers[index] = updatedRetailer;
+    await this.saveDatabase(db);
+    return updatedRetailer;
+  }
+
+  async deleteRetailer(id: string): Promise<void> {
+    const db = await this.getDatabase();
+    db.retailers = db.retailers.filter(r => r.id !== id);
+    await this.saveDatabase(db);
   }
 
   async getGames(): Promise<Game[]> {

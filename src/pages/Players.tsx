@@ -1,24 +1,33 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../services/api';
-import type { Player, Team } from '../types';
+import type { Player, Team, League } from '../types';
 import DataTable from '../components/DataTable';
+import { Filter } from 'lucide-react';
 
 export default function Players() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
+  const [leagues, setLeagues] = useState<League[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Filters
+  const [filterLeague, setFilterLeague] = useState<string>('');
+  const [filterTeam, setFilterTeam] = useState<string>('');
+  const [filterPos, setFilterPos] = useState<string>('');
 
   useEffect(() => {
     async function loadData() {
       try {
-        const [playersData, teamsData] = await Promise.all([
+        const [playersData, teamsData, leaguesData] = await Promise.all([
           api.getPlayers(),
-          api.getTeams()
+          api.getTeams(),
+          api.getLeagues()
         ]);
         // Sort players by points descending
         setPlayers([...playersData].sort((a, b) => b.points - a.points));
         setTeams(teamsData);
+        setLeagues(leaguesData);
       } catch (error) {
         console.error('Failed to load players', error);
       } finally {
@@ -28,9 +37,24 @@ export default function Players() {
     loadData();
   }, []);
 
-  if (loading) return <div className="text-center py-20 text-slate-500 font-medium">Loading players...</div>;
+  const filteredPlayers = useMemo(() => {
+    return players.filter(player => {
+      const team = teams.find(t => t.id === player.teamId);
+
+      // Filter by League
+      if (filterLeague && team?.leagueId !== filterLeague) return false;
+      // Filter by Team
+      if (filterTeam && player.teamId !== filterTeam) return false;
+      // Filter by Position
+      if (filterPos && player.position !== filterPos) return false;
+
+      return true;
+    });
+  }, [players, teams, filterLeague, filterTeam, filterPos]);
 
   const getTeam = (id: string) => teams.find(t => t.id === id);
+
+  if (loading) return <div className="text-center py-20 text-slate-500 font-medium">Loading players...</div>;
 
   const columns = [
     {
@@ -68,17 +92,67 @@ export default function Players() {
 
   return (
     <div className="max-w-[1400px] mx-auto px-4 md:px-8 py-8 space-y-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-black italic tracking-tighter uppercase text-slate-900">Player Statistics</h1>
-        <p className="text-slate-500 mt-2 font-medium">League leaders in points, goals, and assists</p>
+      <div className="mb-8 flex flex-col lg:flex-row lg:items-end justify-between gap-6">
+        <div>
+          <h1 className="text-3xl font-black italic tracking-tighter uppercase text-slate-900">Player Statistics</h1>
+          <p className="text-slate-500 mt-2 font-medium">League leaders in points, goals, and assists</p>
+        </div>
+
+        {/* Filters */}
+        <div className="flex flex-col sm:flex-row gap-3 bg-white border border-slate-200 p-3 rounded-xl shadow-sm">
+          <div className="flex items-center text-slate-400 pl-2">
+            <Filter className="w-4 h-4 mr-2" />
+            <span className="text-xs font-bold uppercase tracking-wider mr-2">Filter</span>
+          </div>
+          <select
+            value={filterLeague}
+            onChange={(e) => {
+              setFilterLeague(e.target.value);
+              setFilterTeam(''); // Reset team filter when league changes
+            }}
+            className="bg-slate-50 border border-slate-200 text-slate-700 text-sm font-semibold rounded-lg px-3 py-2 focus:outline-none focus:border-slate-400"
+          >
+            <option value="">All Leagues</option>
+            {leagues.map(l => <option key={l.id} value={l.id}>{l.shortName}</option>)}
+          </select>
+
+          <select
+            value={filterTeam}
+            onChange={(e) => setFilterTeam(e.target.value)}
+            className="bg-slate-50 border border-slate-200 text-slate-700 text-sm font-semibold rounded-lg px-3 py-2 focus:outline-none focus:border-slate-400"
+          >
+            <option value="">All Teams</option>
+            {teams
+              .filter(t => !filterLeague || t.leagueId === filterLeague)
+              .map(t => <option key={t.id} value={t.id}>{t.shortName}</option>)
+            }
+          </select>
+
+          <select
+            value={filterPos}
+            onChange={(e) => setFilterPos(e.target.value)}
+            className="bg-slate-50 border border-slate-200 text-slate-700 text-sm font-semibold rounded-lg px-3 py-2 focus:outline-none focus:border-slate-400"
+          >
+            <option value="">All POS</option>
+            <option value="F">Forwards (F)</option>
+            <option value="D">Defense (D)</option>
+            <option value="G">Goalies (G)</option>
+          </select>
+        </div>
       </div>
 
       <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-        <DataTable
-          data={players}
-          columns={columns}
-          keyExtractor={(p) => p.id}
-        />
+        {filteredPlayers.length > 0 ? (
+          <DataTable
+            data={filteredPlayers}
+            columns={columns}
+            keyExtractor={(p) => p.id}
+          />
+        ) : (
+          <div className="py-20 text-center text-slate-500 font-medium">
+            No players match the selected filters.
+          </div>
+        )}
       </div>
     </div>
   );
