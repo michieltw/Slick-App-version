@@ -11,6 +11,7 @@ import Venues from './pages/Venues';
 import Login from './pages/Login';
 import Schedule from './pages/Schedule';
 import Scorekeeper from './pages/Scorekeeper';
+import GameDetail from './pages/GameDetail';
 import Community from './pages/Community';
 import AdminDashboard from './pages/AdminDashboard';
 import { AuthProvider } from './contexts/AuthContext';
@@ -26,6 +27,7 @@ function App() {
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/community" element={<Community />} />
             <Route path="/schedule" element={<Schedule />} />
+            <Route path="/games/:id" element={<GameDetail />} />
             <Route path="/games/:id/scorekeeper" element={<Scorekeeper />} />
             <Route path="/teams" element={<Teams />} />
             <Route path="/teams/:id" element={<TeamDetail />} />

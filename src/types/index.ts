@@ -104,6 +104,17 @@ export interface Post extends BaseEntity {
   likes: number;
 }
 
+export interface GameEvent extends BaseEntity {
+  gameId: string;
+  teamId: string;
+  type: 'goal' | 'penalty';
+  playerId: string;
+  assist1Id?: string;
+  assist2Id?: string;
+  period: number;
+  clock: string;
+}
+
 export interface Database {
   users: User[];
   leagues: League[];
@@ -115,4 +126,5 @@ export interface Database {
   venues: Venue[];
   retailers: Retailer[];
   games: Game[];
+  gameEvents: GameEvent[];
 }
