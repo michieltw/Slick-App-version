@@ -1,4 +1,4 @@
-import type { Database, Team, Player, Standing, Venue, Retailer, Game, User, League, Post, Comment } from '../types';
+import type { Database, Team, Player, Standing, Venue, Retailer, Game, User, League, Post, Comment, GameEvent } from '../types';
 
 const DB_KEY = 'bnlplay_db';
 
@@ -57,6 +57,7 @@ class ApiService {
       venues: data.venues.map(v => ({ ...v, createdAt: now, updatedAt: now })),
       retailers: data.retailers.map(r => ({ ...r, createdAt: now, updatedAt: now })),
       games: (data as any).recentGames.map((g: any) => ({ ...g, period: 3, clock: '0:00', createdAt: now, updatedAt: now })),
+      gameEvents: [],
       standings: data.standings.map(s => ({ ...s, updatedAt: now }))
     };
 
@@ -115,17 +116,78 @@ class ApiService {
 
   async getPlayers(): Promise<Player[]> {
     const db = await this.getDatabase();
-    return db.players;
+    return this.calculateDynamicPlayerStats(db.players, db.games, db.gameEvents || []);
   }
 
   async getPlayerById(id: string): Promise<Player | undefined> {
     const db = await this.getDatabase();
-    return db.players.find(p => p.id === id);
+    const players = this.calculateDynamicPlayerStats(db.players, db.games, db.gameEvents || []);
+    return players.find(p => p.id === id);
   }
 
   async getPlayersByTeamId(teamId: string): Promise<Player[]> {
     const db = await this.getDatabase();
-    return db.players.filter(p => p.teamId === teamId);
+    const players = this.calculateDynamicPlayerStats(db.players.filter(p => p.teamId === teamId), db.games, db.gameEvents || []);
+    return players;
+  }
+
+  private calculateDynamicPlayerStats(players: Player[], games: Game[], events: GameEvent[]): Player[] {
+    const playerStats = new Map<string, { gp: number; goals: number; assists: number; points: number }>();
+
+    // Init stats cache
+    players.forEach(p => playerStats.set(p.id, { gp: 0, goals: 0, assists: 0, points: 0 }));
+
+    // Calculate Games Played based on finalized games for their team
+    const finalizedGames = games.filter(g => g.status === 'Final');
+    finalizedGames.forEach(game => {
+       // Ideally we'd have a 'Roster' table for who dressed each game, but here we assume
+       // everyone on the current team roster played in the game
+       players.forEach(p => {
+          if (p.teamId === game.homeTeamId || p.teamId === game.awayTeamId) {
+             const stat = playerStats.get(p.id)!;
+             stat.gp += 1;
+          }
+       });
+    });
+
+    // Process scoring events
+    events.forEach(event => {
+       if (event.type === 'goal') {
+          if (playerStats.has(event.playerId)) {
+             const stat = playerStats.get(event.playerId)!;
+             stat.goals += 1;
+             stat.points += 1;
+          }
+          if (event.assist1Id && playerStats.has(event.assist1Id)) {
+             const stat = playerStats.get(event.assist1Id)!;
+             stat.assists += 1;
+             stat.points += 1;
+          }
+          if (event.assist2Id && playerStats.has(event.assist2Id)) {
+             const stat = playerStats.get(event.assist2Id)!;
+             stat.assists += 1;
+             stat.points += 1;
+          }
+       }
+    });
+
+    // Merge stats with base player data, falling back to seed data if they have 0 GP
+    // (So that the UI doesn't look empty when no live games have been played yet)
+    const hasLiveStats = events.length > 0 || finalizedGames.length > 0;
+
+    return players.map(p => {
+      const stats = playerStats.get(p.id)!;
+      if (hasLiveStats) {
+         return {
+           ...p,
+           gamesPlayed: stats.gp,
+           goals: stats.goals,
+           assists: stats.assists,
+           points: stats.points
+         };
+      }
+      return p;
+    });
   }
 
   async updatePlayer(player: Player): Promise<Player> {
@@ -329,6 +391,38 @@ class ApiService {
     db.games[index] = updatedGame;
     await this.saveDatabase(db);
     return updatedGame;
+  }
+
+  async getGameEvents(gameId: string): Promise<GameEvent[]> {
+    const db = await this.getDatabase();
+    return (db.gameEvents || []).filter(e => e.gameId === gameId).sort((a, b) => {
+      // Sort by period, then by clock
+      if (a.period !== b.period) return a.period - b.period;
+      // Clock is string 'MM:SS' where 20:00 counts down to 00:00, so we reverse string sort
+      return b.clock.localeCompare(a.clock);
+    });
+  }
+
+  async createGameEvent(event: Omit<GameEvent, 'id' | 'createdAt' | 'updatedAt'>): Promise<GameEvent> {
+    const db = await this.getDatabase();
+    const now = new Date().toISOString();
+    const newEvent: GameEvent = {
+      ...event,
+      id: `evt_${Date.now()}`,
+      createdAt: now,
+      updatedAt: now,
+    };
+    if (!db.gameEvents) db.gameEvents = [];
+    db.gameEvents.push(newEvent);
+    await this.saveDatabase(db);
+    return newEvent;
+  }
+
+  async deleteGameEvent(id: string): Promise<void> {
+    const db = await this.getDatabase();
+    if (!db.gameEvents) return;
+    db.gameEvents = db.gameEvents.filter(e => e.id !== id);
+    await this.saveDatabase(db);
   }
 
   async getPosts(): Promise<Post[]> {

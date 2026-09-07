@@ -73,10 +73,10 @@ export default function Schedule() {
               </div>
 
               {/* Matchup Body */}
-              <div className="p-6 flex-grow flex flex-col justify-center space-y-4">
+              <Link to={`/games/${game.id}`} className="p-6 flex-grow flex flex-col justify-center space-y-4 group">
 
                 {/* Away Team */}
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between group-hover:opacity-80 transition-opacity">
                   <div className="flex items-center space-x-4">
                     {awayTeam?.logo && <img src={awayTeam.logo} alt={awayTeam.name} className="w-12 h-12 object-contain" />}
                     <div>
@@ -107,7 +107,7 @@ export default function Schedule() {
                     {game.homeScore}
                   </div>
                 </div>
-              </div>
+              </Link>
 
               {/* Action Footer */}
               {isAuthorized && (
